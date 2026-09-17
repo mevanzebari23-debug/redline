@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<meta name="theme-color" content="#1B2B22">
+<title>Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #1B2B22;
+    --ink-soft: #3C4A40;
+    --paper: #EEF0E6;
+    --paper-line: #D8DCC9;
+    --rule: #C4C9B4;
+    --emerald: #1F5D42;
+    --emerald-deep: #163F2D;
+    --rust: #A6432D;
+    --rust-soft: #F1DCD3;
+    --emerald-soft: #DCE7DD;
+    --card-bg: #F7F8F1;
+    --amber: #8A6D1F;
+    --amber-soft: #EFE6CC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap{ max-width: 640px; margin: 0 auto; }
+
+  .masthead{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 10px; margin-bottom: 16px;
+  }
+  .masthead h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600; font-size: 22px; margin:0; letter-spacing: 0.2px;
+  }
+  .masthead .today{
+    font-family:'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft);
+  }
+
+  .tab-scroll{
+    display:flex; gap:6px; overflow-x:auto; padding-bottom: 4px; margin-bottom: 22px;
+    scrollbar-width: thin;
+  }
+  .tab-scroll::-webkit-scrollbar{ height: 4px; }
+  .tab-scroll::-webkit-scrollbar-thumb{ background: var(--rule); border-radius:2px; }
+  .tab{
+    flex-shrink:0; padding: 8px 14px; border-radius: 3px;
+    border: 1px solid var(--rule); background: var(--card-bg);
+    font-family:'Inter'; font-size: 13px; font-weight:500; color: var(--ink-soft);
+    cursor:pointer; white-space:nowrap; position:relative;
+  }
+  .tab.active{ background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .tab .bal-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:6px; }
+  .tab-add{
+    flex-shrink:0; padding: 8px 12px; border-radius: 3px;
+    border: 1px dashed var(--rule); background: transparent;
+    font-family:'Inter'; font-size: 13px; color: var(--ink-soft); cursor:pointer;
+  }
+  .tab-add:hover{ border-color: var(--emerald); color: var(--emerald-deep); }
+
+  .backup-row{ display:flex; justify-content:flex-end; gap:14px; margin: -12px 0 20px; }
+  .backup-link{
+    background:none; border:none; padding:0; cursor:pointer;
+    font-family:'Inter'; font-size:12px; color: var(--ink-soft); text-decoration:underline;
+  }
+  .backup-link:hover{ color: var(--emerald-deep); }
+
+  .new-contact-row{ display:flex; gap:6px; margin-bottom: 22px; flex-wrap: wrap; }
+  .new-contact-row input, .new-contact-row select{
+    flex:1; min-width: 120px; font-family:'Inter'; font-size:13px; padding: 8px 10px;
+    border:1px solid var(--rule); border-radius:3px; background:#fff; color:var(--ink);
+  }
+  .new-contact-row button{
+    padding: 8px 14px; border:none; border-radius:3px; background: var(--emerald-deep);
+    color:#fff; font-family:'Inter'; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .new-contact-row .cancel{ background: transparent; color: var(--ink-soft); border:1px solid var(--rule); }
+
+  .partner-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 0 0 22px;
+    font-size: 13px; color: var(--ink-soft); flex-wrap: wrap;
+  }
+  .partner-row .name{ font-family:'Inter'; font-size:14px; font-weight:600; color: var(--ink); }
+  .capital-edit{ display:flex; align-items:center; gap:6px; }
+  .capital-edit input{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:600; color: var(--ink);
+    border:none; border-bottom: 1px dashed var(--rule); background:transparent;
+    padding: 2px 2px; width: 90px;
+  }
+  .capital-edit input:focus{ outline:none; border-bottom-color: var(--emerald); }
+  .remove-contact{
+    background:none; border:none; color: var(--rule); cursor:pointer; font-size:12px;
+    text-decoration: underline; padding:0;
+  }
+  .remove-contact:hover{ color: var(--rust); }
+
+  .balance-block{ text-align:left; margin: 6px 0 26px; }
+  .balance-label{ font-family:'Inter', sans-serif; font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; }
+  .balance-value{
+    font-family:'Source Serif 4', serif; font-weight:700;
+    font-size: 44px; line-height:1.15; letter-spacing:-0.5px;
+  }
+  .balance-value.owed-to-you{ color: var(--emerald-deep); }
+  .balance-value.you-owe{ color: var(--rust); }
+  .balance-value.even{ color: var(--ink); }
+  .balance-value.pos{ color: var(--emerald-deep); }
+  .balance-value.neg{ color: var(--rust); }
+
+  .stat-row{ display:flex; gap: 10px; margin-top:16px; flex-wrap: wrap; }
+  .stat{ flex:1; min-width: 90px; background: var(--card-bg); border:1px solid var(--paper-line); border-radius: 3px; padding: 10px 12px; }
+  .stat .k{ font-size:12px; color:var(--ink-soft); margin-bottom:3px; }
+  .stat .v{ font-family:'IBM Plex Mono', monospace; font-size:16px; font-weight:600; }
+  .stat.in .v{ color: var(--emerald-deep); }
+  .stat.out .v{ color: var(--rust); }
+  .stat.cap .v{ color: var(--amber); }
+
+  .entry-form{ background: var(--card-bg); border: 1px solid var(--paper-line); border-radius: 4px; padding: 16px; margin-bottom: 28px; }
+  .toggle-row{ display:flex; gap:8px; margin-bottom: 12px; }
+  .toggle-btn{
+    flex:1; padding: 10px 6px; text-align:center; cursor:pointer;
+    border:1px solid var(--rule); border-radius: 3px;
+    font-family:'Inter'; font-size:13px; font-weight:500; color: var(--ink-soft);
+    background: transparent; transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .toggle-btn.active.in{ background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald-deep); }
+  .toggle-btn.active.out{ background: var(--rust-soft); border-color: var(--rust); color: var(--rust); }
+
+  .field-row{ display:flex; gap:10px; margin-bottom: 10px; }
+  .field{ flex:1; display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:11px; color: var(--ink-soft); }
+  .field input, .field select{
+    font-family:'IBM Plex Mono', monospace; font-size: 15px;
+    padding: 9px 10px; border: 1px solid var(--rule); border-radius: 3px;
+    background: #fff; color: var(--ink); width:100%;
+  }
+  .field input#desc{ font-family:'Inter'; }
+  .field select{ font-family:'Inter'; }
+  .field input:focus, .field select:focus{ outline: 2px solid var(--emerald); outline-offset: 1px; }
+
+  .add-btn{
+    width:100%; padding: 11px 0; border:none; border-radius: 3px;
+    background: var(--ink); color: var(--paper);
+    font-family:'Inter'; font-size: 14px; font-weight:600; cursor:pointer; margin-top: 4px;
+  }
+  .add-btn:hover{ background: var(--emerald-deep); }
+
+  .ledger-heading{ display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; }
+  .ledger-heading h2{ font-family:'Source Serif 4', serif; font-size:16px; font-weight:600; margin:0; }
+  .filter-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .filter-btn{
+    font-family:'Inter'; font-size:12px; padding: 4px 10px; border-radius: 12px;
+    border: 1px solid var(--rule); background: transparent; color: var(--ink-soft); cursor:pointer;
+  }
+  .filter-btn.active{ background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .entries{ border-top: 1px solid var(--ink); }
+  .entry{ display:flex; align-items:center; gap:10px; padding: 11px 2px; border-bottom: 1px solid var(--paper-line); }
+  .entry .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .entry.in .dot{ background: var(--emerald); }
+  .entry.out .dot{ background: var(--rust); }
+  .entry .info{ flex:1; min-width:0; }
+  .entry .desc{ font-size:14px; color: var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .entry .who{ font-size: 12px; color: var(--ink-soft); }
+  .entry .date{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--ink-soft); margin-top:1px; }
+  .entry .amt{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; white-space:nowrap; }
+  .entry.in .amt{ color: var(--emerald-deep); }
+  .entry.out .amt{ color: var(--rust); }
+  .entry .del{ background:none; border:none; color: var(--rule); cursor:pointer; font-size: 16px; padding: 2px 4px; line-height:1; }
+  .entry .del:hover{ color: var(--rust); }
+
+  .cat-pill{
+    display:inline-block; font-size:11px; padding: 1px 7px; border-radius: 9px;
+    background: var(--amber-soft); color: var(--amber); margin-left:6px;
+  }
+
+  .empty{ text-align:center; padding: 40px 10px; color: var(--ink-soft); font-family:'Source Serif 4', serif; font-size: 15px; }
+  .loading{ text-align:center; padding: 40px; color: var(--ink-soft); font-size:13px; }
+
+  @media (max-width:420px){ .balance-value{ font-size: 36px; } }
+
+  /* cars tab */
+  .add-car-card{ background: var(--card-bg); border:1px solid var(--paper-line); border-radius:4px; padding:16px; margin-bottom:20px; }
+  .add-car-card h3{ font-family:'Source Serif 4', serif; font-size:15px; margin:0 0 10px; font-weight:600; }
+  .car-card{ background: var(--card-bg); border:1px solid var(--paper-line); border-radius:4px; padding:14px; margin-bottom:12px; }
+  .car-card-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; cursor:pointer; }
+  .car-name{ font-family:'Source Serif 4', serif; font-size:16px; font-weight:600; }
+  .car-date{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .car-badge{ font-size:11px; padding:2px 9px; border-radius:10px; font-weight:600; white-space:nowrap; }
+  .car-badge.stock{ background: var(--amber-soft); color: var(--amber); }
+  .car-badge.sold{ background: var(--emerald-soft); color: var(--emerald-deep); }
+  .contrib-row{ display:flex; gap:16px; margin-top:9px; font-family:'IBM Plex Mono', monospace; font-size:13px; color: var(--ink-soft); flex-wrap:wrap; }
+  .contrib-row b{ color: var(--ink); }
+  .car-total-row{ margin-top:6px; font-size:13px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace; }
+  .car-body{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--rule); display:none; }
+  .car-body.open{ display:block; }
+  .car-body h4{ font-family:'Inter'; font-size:12px; color:var(--ink-soft); margin:0 0 8px; font-weight:600; }
+  .mini-form-row{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .mini-form-row input{ font-family:'IBM Plex Mono', monospace; font-size:13px; padding:7px 8px; border:1px solid var(--rule); border-radius:3px; flex:1; min-width:70px; }
+  .mini-form-row input.desc-input{ font-family:'Inter'; flex:2; min-width:110px; }
+  .mini-form-row select{ font-family:'Inter'; font-size:13px; padding:7px 8px; border:1px solid var(--rule); border-radius:3px; background:#fff; color:var(--ink); flex:1; min-width:130px; }
+  .mini-btn{ padding:8px 12px; border:none; border-radius:3px; background:var(--ink); color:var(--paper); font-size:12px; font-weight:600; cursor:pointer; }
+  .mini-btn.secondary{ background:transparent; border:1px solid var(--rule); color:var(--ink-soft); }
+  .car-expense-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--paper-line); font-size:13px; }
+  .car-expense-row .desc{ flex:1; color:var(--ink); }
+  .car-expense-row .amt{ font-family:'IBM Plex Mono', monospace; color:var(--rust); font-weight:600; white-space:nowrap; }
+  .car-expense-row .del{ background:none; border:none; color:var(--rule); cursor:pointer; font-size:14px; }
+  .car-expense-row .del:hover{ color: var(--rust); }
+  .car-actions{ display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+  .profit-row{ margin-top:10px; font-family:'IBM Plex Mono', monospace; font-size:14px; font-weight:600; }
+  .profit-row.pos{ color:var(--emerald-deep); }
+  .profit-row.neg{ color:var(--rust); }
+  .car-empty{ text-align:center; padding: 30px 10px; color: var(--ink-soft); font-family:'Source Serif 4', serif; font-size: 15px; }  .mini-btn.danger{ background: var(--rust); color: #fff; }
+
+  .confirm-overlay{
+    position: fixed; inset: 0; background: rgba(27,43,34,0.55);
+    display:flex; align-items:center; justify-content:center; z-index: 1000; padding: 20px;
+  }
+  .confirm-box{
+    background: var(--paper); border-radius: 6px; padding: 20px; max-width: 340px; width:100%;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .confirm-msg{ font-family:'Inter'; font-size:14px; color: var(--ink); margin-bottom: 16px; line-height:1.4; }
+  .confirm-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .confirm-actions .mini-btn{ padding: 9px 16px; font-size:13px; }
+
+  .toast{
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 6px;
+    font-family:'Inter'; font-size:13px; z-index: 1001; max-width: 85%; text-align:center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <h1 id="mastheadTitle">Ledger</h1>
+    <div class="today" id="todayLabel"></div>
+  </div>
+
+  <div class="tab-scroll" id="tabScroll"></div>
+  <div class="backup-row">
+    <button class="backup-link" id="exportBtn">⭳ Export backup</button>
+    <button class="backup-link" id="importBtn">⭱ Restore backup</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+  </div>
+  <div class="new-contact-row" id="newContactRow" style="display:none;">
+    <input id="newContactName" type="text" placeholder="Name, e.g. Ahmed">
+    <select id="newContactType">
+      <option value="person">Person (track who owes who)</option>
+      <option value="spending">Spending (cash in / cash out)</option>
+      <option value="cars">Cars (car purchases)</option>
+    </select>
+    <button id="newContactSave">Add</button>
+    <button class="cancel" id="newContactCancel">Cancel</button>
+  </div>
+
+  <div class="partner-row">
+    <span>With: <span class="name" id="activeName">—</span></span>
+    <span class="capital-edit" id="capitalEdit" style="display:none;">
+      Capital: $<input id="capitalInput" type="number" step="0.01" value="0">
+    </span>
+    <button class="remove-contact" id="removeContactBtn">remove</button>
+  </div>
+
+  <div id="standardSection">
+    <div class="balance-block">
+      <div class="balance-label" id="balanceLabel">Balance</div>
+      <div class="balance-value" id="balanceValue">—</div>
+      <div class="stat-row" id="statRow">
+        <div class="stat in">
+          <div class="k" id="inLabel">They gave me</div>
+          <div class="v" id="statA">—</div>
+        </div>
+        <div class="stat out">
+          <div class="k" id="outLabel">I gave them</div>
+          <div class="v" id="statB">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry-form">
+      <div class="toggle-row" id="toggleRow">
+        <button class="toggle-btn in active" id="btnIn" type="button">They gave me</button>
+        <button class="toggle-btn out" id="btnOut" type="button">I gave them</button>
+      </div>
+      <div class="field-row" id="categoryRow" style="display:none;">
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category"></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="flex:0 0 110px;">
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="desc" id="descLabel">What for</label>
+          <input id="desc" type="text" placeholder="e.g. car sale, repair costs">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" type="date">
+        </div>
+      </div>
+      <button class="add-btn" id="addBtn">Add entry</button>
+    </div>
+
+    <div class="ledger-heading">
+      <h2>History</h2>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="in">They gave</button>
+        <button class="filter-btn" data-filter="out">I gave</button>
+      </div>
+    </div>
+
+    <div id="listContainer"><div class="loading">Loading your ledger…</div></div>
+  </div>
+
+  <div id="carsSection" style="display:none;"></div>
+
+  <div id="confirmOverlay" class="confirm-overlay" style="display:none;">
+    <div class="confirm-box">
+      <div class="confirm-msg" id="confirmMsg"></div>
+      <div class="confirm-actions">
+        <button class="mini-btn secondary" id="confirmCancelBtn">Cancel</button>
+        <button class="mini-btn danger" id="confirmOkBtn">Remove</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" style="display:none;"></div>
+</div>
+
+<script>
+(function(){
+  // Standalone storage shim: uses this browser's localStorage instead of
+  // the Claude-artifact storage API, so the app works as a downloaded file.
+  window.storage = {
+    async get(key){
+      const raw = localStorage.getItem(key);
+      if(raw === null) return null;
+      return { key, value: raw, shared: false };
+    },
+    async set(key, value){
+      localStorage.setItem(key, value);
+      return { key, value, shared: false };
+    },
+    async delete(key){
+      localStorage.removeItem(key);
+      return { key, deleted: true, shared: false };
+    },
+    async list(prefix){
+      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+      return { keys, prefix, shared: false };
+    }
+  };
+
+  const CONTACTS_KEY = 'ledger:contacts';
+  const ENTRIES_KEY = 'ledger:entries';
+  const ACTIVE_KEY = 'ledger:active-contact';
+  const OWNER_NAME = 'Mevan Zebari';
+  const SPEND_OUT_CATEGORIES = ['Carwash', 'Service / repair', 'Parts', 'Fuel', 'Other'];
+  const SPEND_IN_CATEGORIES = ['Car sale', 'Other income'];
+  const CARS_KEY = 'ledger:cars';
+  const CAR_EXPENSES_KEY = 'ledger:car-expenses';
+
+  let contacts = [];       // [{id, name, type: 'person'|'spending'|'cars', capital?}]
+  let entries = [];        // {id, contactId, type:'in'|'out', amount, desc, date, category?}
+  let cars = [];           // [{id, name, totalPrice, mevanPaid, hakimPaid, date, soldPrice?, soldDate?}]
+  let carExpenses = [];    // [{id, carId, amount, desc, date}]
+  let expandedCarId = null;
+  let activeContactId = null;
+  let currentType = 'in';
+  let currentFilter = 'all';
+  let loaded = false;
+
+  const fmt = (n) => { const sign = n < 0 ? '-' : ''; return sign + '$' + Math.abs(n).toFixed(2); };
+
+  const todayISO = () => {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off*60000);
+    return local.toISOString().slice(0,10);
+  };
+
+  function uid(prefix){ return prefix + Date.now() + Math.random().toString(36).slice(2,7); }
+  function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  // Custom confirm/toast — native window.confirm()/alert() get silently
+  // blocked inside some in-app browsers and installed-app (PWA) views,
+  // which made "remove" buttons appear to do nothing. These work everywhere.
+  function showConfirm(message){
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('confirmOverlay');
+      document.getElementById('confirmMsg').textContent = message;
+      overlay.style.display = 'flex';
+      const okBtn = document.getElementById('confirmOkBtn');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      function cleanup(result){
+        overlay.style.display = 'none';
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        resolve(result);
+      }
+      function onOk(){ cleanup(true); }
+      function onCancel(){ cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+    });
+  }
+
+  let toastTimer = null;
+  function showToast(message, duration){
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.display = 'block';
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.style.display = 'none'; }, duration || 2500);
+  }
+
+  document.getElementById('date').value = todayISO();
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  document.getElementById('mastheadTitle').textContent = OWNER_NAME.split(' ')[0] + '\u2019s Ledger';
+
+  function activeContact(){ return contacts.find(c => c.id === activeContactId); }
+
+  async function load(){
+    try{
+      const cRes = await window.storage.get(CONTACTS_KEY, false);
+      contacts = cRes && cRes.value ? JSON.parse(cRes.value) : [];
+    }catch(e){ contacts = []; }
+
+    contacts.forEach(c => {
+      if(!c.type) c.type = 'person';
+      if(c.type === 'spending' && typeof c.capital !== 'number') c.capital = 0;
+      if(c.type === 'cars'){
+        if(!c.ownerName1) c.ownerName1 = 'Owner 1';
+        if(!c.ownerName2) c.ownerName2 = 'Owner 2';
+      }
+    });
+
+    if(contacts.length === 0){
+      contacts = [{ id: uid('c'), name: 'Hakim Goran', type: 'person' }];
+    }
+
+    const ahmed = contacts.find(c => c.name.toLowerCase() === 'ahmed' && c.type === 'person');
+    let spendingTab = contacts.find(c => c.type === 'spending');
+    if(ahmed){
+      if(spendingTab){
+        entries.forEach(e => { if(e.contactId === ahmed.id) e.contactId = spendingTab.id; });
+        contacts = contacts.filter(c => c.id !== ahmed.id);
+      } else {
+        ahmed.name = 'Spending';
+        ahmed.type = 'spending';
+        ahmed.capital = 0;
+        spendingTab = ahmed;
+      }
+    }
+    if(!contacts.find(c => c.type === 'spending')){
+      contacts.push({ id: uid('c'), name: 'Spending', type: 'spending', capital: 0 });
+    }
+    if(!contacts.find(c => c.type === 'cars')){
+      contacts.push({ id: uid('c'), name: 'Cars', type: 'cars', ownerName1: 'Owner 1', ownerName2: 'Owner 2' });
+    }
+
+    try{
+      const eRes = await window.storage.get(ENTRIES_KEY, false);
+      entries = eRes && eRes.value ? JSON.parse(eRes.value) : entries;
+    }catch(e){}
+
+    try{
+      const carsRes = await window.storage.get(CARS_KEY, false);
+      cars = carsRes && carsRes.value ? JSON.parse(carsRes.value) : [];
+    }catch(e){ cars = []; }
+    try{
+      const ceRes = await window.storage.get(CAR_EXPENSES_KEY, false);
+      carExpenses = ceRes && ceRes.value ? JSON.parse(ceRes.value) : [];
+    }catch(e){ carExpenses = []; }
+
+    // migrate old spending entries: had category but no type -> treat as 'out'
+    entries.forEach(e => {
+      const c = contacts.find(x => x.id === e.contactId);
+      if(c && c.type === 'spending' && !e.type){
+        e.type = 'out';
+      }
+    });
+
+    await saveContacts();
+    await saveEntries();
+
+    try{
+      const aRes = await window.storage.get(ACTIVE_KEY, false);
+      activeContactId = aRes && aRes.value ? aRes.value : contacts[0].id;
+    }catch(e){ activeContactId = contacts[0].id; }
+
+    if(!contacts.find(c => c.id === activeContactId)){
+      activeContactId = contacts[0] ? contacts[0].id : null;
+    }
+
+    loaded = true;
+    renderTabs();
+    renderActiveHeader();
+    render();
+  }
+
+  async function saveContacts(){ try{ await window.storage.set(CONTACTS_KEY, JSON.stringify(contacts), false); }catch(e){} }
+  async function saveEntries(){ try{ await window.storage.set(ENTRIES_KEY, JSON.stringify(entries), false); }catch(e){} }
+  async function saveActive(){ try{ await window.storage.set(ACTIVE_KEY, activeContactId, false); }catch(e){} }
+  async function saveCars(){ try{ await window.storage.set(CARS_KEY, JSON.stringify(cars), false); }catch(e){} }
+  async function saveCarExpenses(){ try{ await window.storage.set(CAR_EXPENSES_KEY, JSON.stringify(carExpenses), false); }catch(e){} }
+
+  function carsContact(){ return contacts.find(c => c.type === 'cars'); }
+  function carOwner1Name(){ const c = carsContact(); return (c && c.ownerName1) || 'Owner 1'; }
+  function carOwner2Name(){ const c = carsContact(); return (c && c.ownerName2) || 'Owner 2'; }
+  function carExpensesFor(carId){ return carExpenses.filter(e => e.carId === carId); }
+  function carExpenseTotal(carId){ return carExpensesFor(carId).reduce((s,e)=>s+e.amount,0); }
+  function carInvested(car){ return (car.totalPrice||0) + carExpenseTotal(car.id); }
+  function carProfit(car){ return (car.soldPrice == null) ? null : (car.soldPrice - carInvested(car)); }
+
+  function contactBalance(contactId){
+    const cIn = entries.filter(e=>e.contactId===contactId && e.type==='in').reduce((s,e)=>s+e.amount,0);
+    const cOut = entries.filter(e=>e.contactId===contactId && e.type==='out').reduce((s,e)=>s+e.amount,0);
+    return cIn - cOut;
+  }
+  function spendingBalance(c){
+    return (c.capital || 0) + contactBalance(c.id);
+  }
+
+  function renderTabs(){
+    const scroll = document.getElementById('tabScroll');
+    scroll.innerHTML = '';
+    contacts.forEach(c => {
+      const tab = document.createElement('button');
+      tab.className = 'tab' + (c.id === activeContactId ? ' active' : '');
+      let dotColor = 'transparent';
+      if(c.type === 'person'){
+        const net = contactBalance(c.id);
+        dotColor = Math.abs(net) < 0.005 ? 'transparent' : (net > 0 ? 'var(--rust)' : 'var(--emerald)');
+      } else if(c.type === 'spending'){
+        const bal = spendingBalance(c);
+        dotColor = Math.abs(bal) < 0.005 ? 'transparent' : (bal > 0 ? 'var(--emerald)' : 'var(--rust)');
+      } else if(c.type === 'cars'){
+        const inStock = cars.filter(car => car.soldPrice == null).length;
+        dotColor = inStock > 0 ? 'var(--amber)' : 'transparent';
+      }
+      tab.innerHTML = `${escapeHtml(c.name)}<span class="bal-dot" style="background:${dotColor}"></span>`;
+      tab.addEventListener('click', () => {
+        activeContactId = c.id;
+        saveActive();
+        renderTabs();
+        renderActiveHeader();
+        render();
+      });
+      scroll.appendChild(tab);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className = 'tab-add';
+    addBtn.textContent = '+ Add';
+    addBtn.addEventListener('click', () => {
+      document.getElementById('newContactRow').style.display = 'flex';
+      document.getElementById('newContactName').focus();
+    });
+    scroll.appendChild(addBtn);
+  }
+
+  document.getElementById('newContactSave').addEventListener('click', async () => {
+    const nameEl = document.getElementById('newContactName');
+    const typeEl = document.getElementById('newContactType');
+    const name = nameEl.value.trim();
+    if(!name) return;
+    const c = { id: uid('c'), name, type: typeEl.value };
+    if(typeEl.value === 'spending') c.capital = 0;
+    contacts.push(c);
+    await saveContacts();
+    activeContactId = c.id;
+    await saveActive();
+    nameEl.value = '';
+    document.getElementById('newContactRow').style.display = 'none';
+    renderTabs();
+    renderActiveHeader();
+    render();
+  });
+  document.getElementById('newContactCancel').addEventListener('click', () => {
+    document.getElementById('newContactName').value = '';
+    document.getElementById('newContactRow').style.display = 'none';
+  });
+  document.getElementById('newContactName').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') document.getElementById('newContactSave').click();
+  });
+
+  document.getElementById('capitalInput').addEventListener('change', async (e) => {
+    const c = activeContact();
+    if(!c || c.type !== 'spending') return;
+    const val = parseFloat(e.target.value);
+    c.capital = isNaN(val) ? 0 : Math.round(val*100)/100;
+    await saveContacts();
+    renderTabs();
+    render();
+  });
+
+  document.getElementById('removeContactBtn').addEventListener('click', async () => {
+    if(contacts.length <= 1) return;
+    const c = activeContact();
+    if(!c) return;
+    const ok = await showConfirm(`Remove ${c.name} and all its entries?`);
+    if(!ok) return;
+    contacts = contacts.filter(x => x.id !== activeContactId);
+    entries = entries.filter(e => e.contactId !== activeContactId);
+    activeContactId = contacts[0].id;
+    await saveContacts();
+    await saveEntries();
+    await saveActive();
+    renderTabs();
+    renderActiveHeader();
+    render();
+  });
+
+  function populateCategoryOptions(){
+    const catSel = document.getElementById('category');
+    const opts = currentType === 'in' ? SPEND_IN_CATEGORIES : SPEND_OUT_CATEGORIES;
+    catSel.innerHTML = opts.map(o => `<option>${escapeHtml(o)}</option>`).join('');
+  }
+
+  function renderActiveHeader(){
+    const c = activeContact();
+    const name = c ? c.name : '—';
+    document.getElementById('activeName').textContent = name;
+
+    const toggleRow = document.getElementById('toggleRow');
+    const categoryRow = document.getElementById('categoryRow');
+    const descLabel = document.getElementById('descLabel');
+    const descInput = document.getElementById('desc');
+    const filterRow = document.getElementById('filterRow');
+    const statRow = document.getElementById('statRow');
+    const capitalEdit = document.getElementById('capitalEdit');
+    const capitalInput = document.getElementById('capitalInput');
+
+    currentType = 'in';
+    document.getElementById('btnIn').classList.add('active');
+    document.getElementById('btnOut').classList.remove('active');
+
+    if(c && c.type === 'cars'){
+      document.getElementById('standardSection').style.display = 'none';
+      document.getElementById('carsSection').style.display = 'block';
+      capitalEdit.style.display = 'none';
+      renderCarsSection();
+      return;
+    }
+    document.getElementById('standardSection').style.display = 'block';
+    document.getElementById('carsSection').style.display = 'none';
+
+    if(c && c.type === 'spending'){
+      toggleRow.style.display = 'flex';
+      categoryRow.style.display = 'flex';
+      document.getElementById('btnIn').textContent = 'Money in';
+      document.getElementById('btnOut').textContent = 'Money out';
+      populateCategoryOptions();
+      descLabel.textContent = 'Note (optional)';
+      descInput.placeholder = 'e.g. sold the Civic, oil change';
+      capitalEdit.style.display = 'flex';
+      capitalInput.value = c.capital || 0;
+      filterRow.innerHTML = `
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="in">Money in</button>
+        <button class="filter-btn" data-filter="out">Money out</button>`;
+      statRow.innerHTML = `
+        <div class="stat cap"><div class="k">Capital</div><div class="v" id="statCap">—</div></div>
+        <div class="stat in"><div class="k">Money in</div><div class="v" id="statA">—</div></div>
+        <div class="stat out"><div class="k">Money out</div><div class="v" id="statB">—</div></div>`;
+    } else {
+      toggleRow.style.display = 'flex';
+      categoryRow.style.display = 'none';
+      capitalEdit.style.display = 'none';
+      descLabel.textContent = 'What for';
+      descInput.placeholder = 'e.g. car sale, repair costs';
+      document.getElementById('btnIn').textContent = `${name} gave me`;
+      document.getElementById('btnOut').textContent = `I gave ${name}`;
+      filterRow.innerHTML = `
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="in">${escapeHtml(name)} gave</button>
+        <button class="filter-btn" data-filter="out">I gave</button>`;
+      statRow.innerHTML = `
+        <div class="stat in"><div class="k">${escapeHtml(name)} gave me</div><div class="v" id="statA">—</div></div>
+        <div class="stat out"><div class="k">I gave ${escapeHtml(name)}</div><div class="v" id="statB">—</div></div>`;
+    }
+    currentFilter = 'all';
+    attachFilterHandlers();
+  }
+
+  function attachFilterHandlers(){
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        currentFilter = b.dataset.filter;
+        render();
+      });
+    });
+  }
+
+  const btnIn = document.getElementById('btnIn');
+  const btnOut = document.getElementById('btnOut');
+  btnIn.addEventListener('click', () => {
+    currentType='in'; btnIn.classList.add('active'); btnOut.classList.remove('active');
+    const c = activeContact();
+    if(c && c.type === 'spending') populateCategoryOptions();
+  });
+  btnOut.addEventListener('click', () => {
+    currentType='out'; btnOut.classList.add('active'); btnIn.classList.remove('active');
+    const c = activeContact();
+    if(c && c.type === 'spending') populateCategoryOptions();
+  });
+
+  function addEntry(){
+    if(!activeContactId) return;
+    const c = activeContact();
+    const amountEl = document.getElementById('amount');
+    const descEl = document.getElementById('desc');
+    const dateEl = document.getElementById('date');
+    const amt = parseFloat(amountEl.value);
+    if(isNaN(amt) || amt <= 0){ amountEl.focus(); return; }
+
+    let entry;
+    if(c && c.type === 'spending'){
+      const category = document.getElementById('category').value;
+      entry = {
+        id: uid('e'), contactId: activeContactId, type: currentType, category,
+        amount: Math.round(amt*100)/100,
+        desc: descEl.value.trim() || category,
+        date: dateEl.value || todayISO()
+      };
+    } else {
+      entry = {
+        id: uid('e'), contactId: activeContactId, type: currentType,
+        amount: Math.round(amt*100)/100,
+        desc: descEl.value.trim() || (currentType === 'in' ? 'Money received' : 'Money given'),
+        date: dateEl.value || todayISO()
+      };
+    }
+    entries.unshift(entry);
+    saveEntries();
+    amountEl.value = '';
+    descEl.value = '';
+    dateEl.value = todayISO();
+    amountEl.focus();
+    renderTabs();
+    render();
+  }
+
+  async function removeEntry(id){
+    entries = entries.filter(e => e.id !== id);
+    await saveEntries();
+    renderTabs();
+    render();
+  }
+
+  document.getElementById('addBtn').addEventListener('click', addEntry);
+  document.getElementById('amount').addEventListener('keydown', (e)=>{ if(e.key==='Enter') addEntry(); });
+  document.getElementById('desc').addEventListener('keydown', (e)=>{ if(e.key==='Enter') addEntry(); });
+
+  function render(){
+    if(!loaded || !activeContactId) return;
+    const c = activeContact();
+    if(c && c.type === 'cars'){ renderCarsSection(); return; }
+    const name = c ? c.name : 'them';
+    const contactEntries = entries.filter(e => e.contactId === activeContactId);
+    const list = document.getElementById('listContainer');
+    const balEl = document.getElementById('balanceValue');
+    const balLabel = document.getElementById('balanceLabel');
+
+    if(c && c.type === 'spending'){
+      const totalIn = contactEntries.filter(e=>e.type==='in').reduce((s,e)=>s+e.amount,0);
+      const totalOut = contactEntries.filter(e=>e.type==='out').reduce((s,e)=>s+e.amount,0);
+      const balance = (c.capital || 0) + totalIn - totalOut;
+
+      balLabel.textContent = 'Balance';
+      balEl.className = 'balance-value ' + (balance < 0 ? 'neg' : 'pos');
+      balEl.textContent = fmt(balance);
+
+      const statCap = document.getElementById('statCap');
+      const statA = document.getElementById('statA');
+      const statB = document.getElementById('statB');
+      if(statCap) statCap.textContent = fmt(c.capital || 0);
+      if(statA) statA.textContent = fmt(totalIn);
+      if(statB) statB.textContent = fmt(totalOut);
+
+      const filtered = contactEntries.filter(e => currentFilter === 'all' ? true : e.type === currentFilter);
+      if(filtered.length === 0){
+        list.innerHTML = '<div class="empty">No entries yet. Add money in or out above.</div>';
+        return;
+      }
+      const sorted = [...filtered].sort((a,b) => (b.date||'').localeCompare(a.date||'') || 0);
+      const rows = sorted.map(e => {
+        const dateLabel = new Date(e.date + 'T00:00:00').toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+        const sign = e.type === 'in' ? '+' : '−';
+        return `
+          <div class="entry ${e.type}">
+            <span class="dot"></span>
+            <div class="info">
+              <div class="desc">${escapeHtml(e.desc)}<span class="cat-pill">${escapeHtml(e.category || '')}</span></div>
+              <div class="date">${dateLabel}</div>
+            </div>
+            <div class="amt">${sign}${fmt(e.amount).replace('-','')}</div>
+            <button class="del" data-id="${e.id}" title="Delete entry">✕</button>
+          </div>`;
+      }).join('');
+      list.innerHTML = `<div class="entries">${rows}</div>`;
+      list.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', () => removeEntry(btn.dataset.id)));
+      return;
+    }
+
+    // person-type contact
+    const totalIn = contactEntries.filter(e=>e.type==='in').reduce((s,e)=>s+e.amount,0);
+    const totalOut = contactEntries.filter(e=>e.type==='out').reduce((s,e)=>s+e.amount,0);
+    const net = totalIn - totalOut;
+
+    if(Math.abs(net) < 0.005){
+      balEl.textContent = fmt(0);
+      balEl.className = 'balance-value even';
+      balLabel.textContent = 'Settled up';
+    } else if(net > 0){
+      balEl.textContent = fmt(net);
+      balEl.className = 'balance-value you-owe';
+      balLabel.textContent = `You owe ${name}`;
+    } else {
+      balEl.textContent = fmt(-net);
+      balEl.className = 'balance-value owed-to-you';
+      balLabel.textContent = `${name} owes you`;
+    }
+    const statA = document.getElementById('statA');
+    const statB = document.getElementById('statB');
+    if(statA) statA.textContent = fmt(totalIn);
+    if(statB) statB.textContent = fmt(totalOut);
+
+    const filtered = contactEntries.filter(e => currentFilter === 'all' ? true : e.type === currentFilter);
+    if(filtered.length === 0){
+      list.innerHTML = '<div class="empty">Nothing here yet. Add your first entry above.</div>';
+      return;
+    }
+    const sorted = [...filtered].sort((a,b) => (b.date||'').localeCompare(a.date||'') || 0);
+    const rows = sorted.map(e => {
+      const dateLabel = new Date(e.date + 'T00:00:00').toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+      const sign = e.type === 'in' ? '+' : '−';
+      const who = e.type === 'in' ? `${name} \u2192 you` : `you \u2192 ${name}`;
+      return `
+        <div class="entry ${e.type}">
+          <span class="dot"></span>
+          <div class="info">
+            <div class="desc">${escapeHtml(e.desc)}</div>
+            <div class="date">${dateLabel} · <span class="who">${escapeHtml(who)}</span></div>
+          </div>
+          <div class="amt">${sign}${fmt(e.amount).replace('-','')}</div>
+          <button class="del" data-id="${e.id}" title="Delete entry">✕</button>
+        </div>`;
+    }).join('');
+    list.innerHTML = `<div class="entries">${rows}</div>`;
+    list.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', () => removeEntry(btn.dataset.id)));
+  }
+
+  function renderCarsSection(){
+    const section = document.getElementById('carsSection');
+    const owner = carOwner1Name();
+    const partner = carOwner2Name();
+
+    const inStock = cars.filter(car => car.soldPrice == null);
+    const sold = cars.filter(car => car.soldPrice != null);
+    const investedInStock = inStock.reduce((s,car)=>s+carInvested(car),0);
+    const totalProfit = sold.reduce((s,car)=>s+carProfit(car),0);
+
+    section.innerHTML = `
+      <div class="mini-form-row" style="margin-bottom:18px;">
+        <input type="text" id="ownerName1Input" value="${escapeHtml(owner)}" placeholder="Owner 1 name">
+        <input type="text" id="ownerName2Input" value="${escapeHtml(partner)}" placeholder="Owner 2 name">
+      </div>
+
+      <div class="balance-block">
+        <div class="balance-label">Invested in stock</div>
+        <div class="balance-value pos">${fmt(investedInStock)}</div>
+        <div class="stat-row">
+          <div class="stat cap"><div class="k">Cars in stock</div><div class="v">${inStock.length}</div></div>
+          <div class="stat in"><div class="k">Sold</div><div class="v">${sold.length}</div></div>
+          <div class="stat ${totalProfit < 0 ? 'out' : 'in'}"><div class="k">Total profit</div><div class="v">${fmt(totalProfit)}</div></div>
+        </div>
+      </div>
+
+      <div class="add-car-card">
+        <h3>Add a car</h3>
+        <div class="field-row">
+          <div class="field">
+            <label for="carName">Car</label>
+            <input id="carName" type="text" placeholder="e.g. 2019 Toyota Camry">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="carTotal">Total price</label>
+            <input id="carTotal" type="number" step="0.01" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label for="carDate">Date</label>
+            <input id="carDate" type="date">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="carMevanPaid">${escapeHtml(owner)} gave</label>
+            <input id="carMevanPaid" type="number" step="0.01" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label for="carHakimPaid">${escapeHtml(partner)} gave</label>
+            <input id="carHakimPaid" type="number" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <button class="add-btn" id="addCarBtn">Add car</button>
+      </div>
+
+      <div class="ledger-heading"><h2>Cars</h2></div>
+      <div id="carsList"></div>
+    `;
+
+    document.getElementById('carDate').value = todayISO();
+
+    document.getElementById('ownerName1Input').addEventListener('change', async (e) => {
+      const c = carsContact();
+      if(!c) return;
+      c.ownerName1 = e.target.value.trim() || 'Owner 1';
+      await saveContacts();
+      renderTabs();
+      renderCarsSection();
+    });
+    document.getElementById('ownerName2Input').addEventListener('change', async (e) => {
+      const c = carsContact();
+      if(!c) return;
+      c.ownerName2 = e.target.value.trim() || 'Owner 2';
+      await saveContacts();
+      renderTabs();
+      renderCarsSection();
+    });
+
+    // auto-fill the other contribution field when one is entered
+    const mevanEl = document.getElementById('carMevanPaid');
+    const hakimEl = document.getElementById('carHakimPaid');
+    const totalEl = document.getElementById('carTotal');
+    mevanEl.addEventListener('input', () => {
+      const total = parseFloat(totalEl.value);
+      const mv = parseFloat(mevanEl.value);
+      if(!isNaN(total) && !isNaN(mv)) hakimEl.value = Math.max(0, Math.round((total-mv)*100)/100);
+    });
+    hakimEl.addEventListener('input', () => {
+      const total = parseFloat(totalEl.value);
+      const hk = parseFloat(hakimEl.value);
+      if(!isNaN(total) && !isNaN(hk)) mevanEl.value = Math.max(0, Math.round((total-hk)*100)/100);
+    });
+
+    document.getElementById('addCarBtn').addEventListener('click', addCar);
+
+    const listEl = document.getElementById('carsList');
+    if(cars.length === 0){
+      listEl.innerHTML = '<div class="car-empty">No cars yet. Add your first purchase above.</div>';
+      return;
+    }
+
+    const sortedCars = [...cars].sort((a,b) => (b.date||'').localeCompare(a.date||'') || 0);
+    listEl.innerHTML = sortedCars.map(car => renderCarCard(car, partner, owner)).join('');
+    attachCarCardHandlers();
+  }
+
+  function renderCarCard(car, partner, owner){
+    const invested = carInvested(car);
+    const profit = carProfit(car);
+    const expenses = carExpensesFor(car.id);
+    const dateLabel = new Date(car.date + 'T00:00:00').toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+    const isOpen = expandedCarId === car.id;
+
+    const spentByOwner = expenses.filter(e => e.paidBy === 'owner').reduce((s,e)=>s+e.amount,0);
+    const spentByPartner = expenses.filter(e => e.paidBy === 'partner').reduce((s,e)=>s+e.amount,0);
+
+    const expenseRows = expenses.map(e => {
+      const eDate = new Date(e.date + 'T00:00:00').toLocaleDateString(undefined, { month:'short', day:'numeric' });
+      const payerLabel = e.paidBy === 'partner' ? partner : owner;
+      return `
+        <div class="car-expense-row">
+          <span class="desc">${escapeHtml(e.desc)} <span class="car-date">${eDate} · paid by ${escapeHtml(payerLabel)}</span></span>
+          <span class="amt">-${fmt(e.amount).replace('-','')}</span>
+          <button class="del" data-expid="${e.id}" title="Delete">✕</button>
+        </div>`;
+    }).join('') || '<div class="car-date" style="padding:6px 0;">No extra spending logged.</div>';
+
+    const profitBlock = car.soldPrice != null
+      ? `<div class="profit-row ${profit < 0 ? 'neg' : 'pos'}">${profit < 0 ? 'Loss' : 'Profit'}: ${fmt(Math.abs(profit))} (sold for ${fmt(car.soldPrice)})</div>`
+      : `
+        <div class="mini-form-row">
+          <input type="number" step="0.01" placeholder="Sold for $" id="soldPrice-${car.id}">
+          <input type="date" value="${todayISO()}" id="soldDate-${car.id}">
+          <button class="mini-btn" data-markid="${car.id}">Mark sold</button>
+        </div>`;
+
+    return `
+      <div class="car-card">
+        <div class="car-card-head" data-toggleid="${car.id}">
+          <div>
+            <div class="car-name">${escapeHtml(car.name)}</div>
+            <div class="car-date">${dateLabel}</div>
+          </div>
+          <span class="car-badge ${car.soldPrice != null ? 'sold' : 'stock'}">${car.soldPrice != null ? 'Sold' : 'In stock'}</span>
+        </div>
+        <div class="contrib-row">
+          <span>${escapeHtml(owner)}: <b>${fmt(car.mevanPaid||0)}</b></span>
+          <span>${escapeHtml(partner)}: <b>${fmt(car.hakimPaid||0)}</b></span>
+          <span>Price: <b>${fmt(car.totalPrice||0)}</b></span>
+        </div>
+        ${expenses.length > 0 ? `
+        <div class="contrib-row" style="margin-top:2px;">
+          <span>Spending by ${escapeHtml(owner)}: <b>${fmt(spentByOwner)}</b></span>
+          <span>Spending by ${escapeHtml(partner)}: <b>${fmt(spentByPartner)}</b></span>
+        </div>` : ''}
+        <div class="car-total-row">Invested so far (price + spending): ${fmt(invested)}</div>
+        <div class="car-body ${isOpen ? 'open' : ''}" id="carBody-${car.id}">
+          <h4>Extra spending on this car</h4>
+          ${expenseRows}
+          <div class="mini-form-row" style="margin-top:10px;">
+            <input type="number" step="0.01" placeholder="Amount" id="expAmt-${car.id}">
+            <input type="text" class="desc-input" placeholder="e.g. oil change" id="expDesc-${car.id}">
+            <input type="date" value="${todayISO()}" id="expDate-${car.id}">
+            <select id="expPaidBy-${car.id}">
+              <option value="owner">Paid by ${escapeHtml(owner)}</option>
+              <option value="partner">Paid by ${escapeHtml(partner)}</option>
+            </select>
+            <button class="mini-btn" data-addexpid="${car.id}">Add</button>
+          </div>
+          ${profitBlock}
+          <div class="car-actions">
+            <button class="mini-btn secondary" data-delcarid="${car.id}">Remove car</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function attachCarCardHandlers(){
+    document.querySelectorAll('[data-toggleid]').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.toggleid;
+        expandedCarId = expandedCarId === id ? null : id;
+        renderCarsSection();
+      });
+    });
+    document.querySelectorAll('[data-addexpid]').forEach(btn => {
+      btn.addEventListener('click', () => addCarExpense(btn.dataset.addexpid));
+    });
+    document.querySelectorAll('[data-expid]').forEach(btn => {
+      btn.addEventListener('click', () => deleteCarExpense(btn.dataset.expid));
+    });
+    document.querySelectorAll('[data-markid]').forEach(btn => {
+      btn.addEventListener('click', () => markSold(btn.dataset.markid));
+    });
+    document.querySelectorAll('[data-delcarid]').forEach(btn => {
+      btn.addEventListener('click', () => deleteCar(btn.dataset.delcarid));
+    });
+  }
+
+  async function addCar(){
+    const nameEl = document.getElementById('carName');
+    const totalEl = document.getElementById('carTotal');
+    const mevanEl = document.getElementById('carMevanPaid');
+    const hakimEl = document.getElementById('carHakimPaid');
+    const dateEl = document.getElementById('carDate');
+
+    const name = nameEl.value.trim();
+    const total = parseFloat(totalEl.value);
+    if(!name || isNaN(total) || total <= 0){ nameEl.focus(); return; }
+    const mevanPaid = parseFloat(mevanEl.value) || 0;
+    const hakimPaid = parseFloat(hakimEl.value) || 0;
+
+    cars.unshift({
+      id: uid('car'), name, totalPrice: Math.round(total*100)/100,
+      mevanPaid: Math.round(mevanPaid*100)/100,
+      hakimPaid: Math.round(hakimPaid*100)/100,
+      date: dateEl.value || todayISO(),
+      soldPrice: null, soldDate: null
+    });
+    await saveCars();
+    renderTabs();
+    renderCarsSection();
+  }
+
+  async function deleteCar(carId){
+    const car = cars.find(c => c.id === carId);
+    if(!car) return;
+    const ok = await showConfirm(`Remove ${car.name} and its spending records?`);
+    if(!ok) return;
+    cars = cars.filter(c => c.id !== carId);
+    carExpenses = carExpenses.filter(e => e.carId !== carId);
+    if(expandedCarId === carId) expandedCarId = null;
+    await saveCars();
+    await saveCarExpenses();
+    renderTabs();
+    renderCarsSection();
+  }
+
+  async function addCarExpense(carId){
+    const amtEl = document.getElementById(`expAmt-${carId}`);
+    const descEl = document.getElementById(`expDesc-${carId}`);
+    const dateEl = document.getElementById(`expDate-${carId}`);
+    const paidByEl = document.getElementById(`expPaidBy-${carId}`);
+    const amt = parseFloat(amtEl.value);
+    if(isNaN(amt) || amt <= 0){ amtEl.focus(); return; }
+    carExpenses.push({
+      id: uid('ce'), carId, amount: Math.round(amt*100)/100,
+      desc: descEl.value.trim() || 'Spending',
+      date: dateEl.value || todayISO(),
+      paidBy: (paidByEl && paidByEl.value === 'partner') ? 'partner' : 'owner'
+    });
+    expandedCarId = carId;
+    await saveCarExpenses();
+    renderTabs();
+    renderCarsSection();
+  }
+
+  async function deleteCarExpense(expId){
+    carExpenses = carExpenses.filter(e => e.id !== expId);
+    await saveCarExpenses();
+    renderTabs();
+    renderCarsSection();
+  }
+
+  async function markSold(carId){
+    const priceEl = document.getElementById(`soldPrice-${carId}`);
+    const dateEl = document.getElementById(`soldDate-${carId}`);
+    const price = parseFloat(priceEl.value);
+    if(isNaN(price) || price <= 0){ priceEl.focus(); return; }
+    const car = cars.find(c => c.id === carId);
+    if(!car) return;
+    car.soldPrice = Math.round(price*100)/100;
+    car.soldDate = dateEl.value || todayISO();
+    expandedCarId = carId;
+    await saveCars();
+    renderTabs();
+    renderCarsSection();
+  }
+
+  const BACKUP_KEYS = ['ledger:contacts', 'ledger:entries', 'ledger:cars', 'ledger:car-expenses', 'ledger:active-contact'];
+
+  async function exportBackup(){
+    const data = {};
+    for(const k of BACKUP_KEYS){
+      const r = await window.storage.get(k);
+      if(r) data[k] = r.value;
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ledger-backup-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importBackupFile(file){
+    let data;
+    try{
+      data = JSON.parse(await file.text());
+    }catch(e){
+      showToast('That file could not be read as a backup.', 3000);
+      return;
+    }
+    for(const k of BACKUP_KEYS){
+      if(typeof data[k] === 'string'){
+        await window.storage.set(k, data[k]);
+      }
+    }
+    showToast('Backup restored. Reloading…', 1400);
+    setTimeout(() => location.reload(), 1200);
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', exportBackup);
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(file) importBackupFile(file);
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
